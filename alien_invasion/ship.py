@@ -39,4 +39,8 @@ class Ship():
             
         self.rect.centerx = self.position
         
+    def center_ship(self):
+        """Resets the ship to the center"""
+        self.center = self.screen_rect.centerx
+        
     

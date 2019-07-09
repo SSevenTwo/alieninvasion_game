@@ -2,6 +2,7 @@ import sys
 import pygame
 from bullet import Bullet
 from alien import Alien
+from time import sleep
 
 def update_events(settings, screen, ship,bullets):
     """Respond to game events"""
@@ -45,9 +46,10 @@ def check_keyup(event, ship):
     elif event.key == pygame.K_LEFT:
         ship.move_left = False
 
-def update_bullets(bullets):
+def update_bullets(settings,screen,ship, aliens,bullets):
     """Updates position of bullets as well as delete old bullets"""
     bullets.update()
+    bullet_alien_collision(settings,screen,ship,aliens,bullets)
         
     #Remove bullets when top is reached
     for bullet in bullets.copy():
@@ -67,8 +69,7 @@ def create_army(settings, screen, ship, aliens):
     number_of_aliens = get_alien_no(settings,alien.rect.width)
     number_of_rows = get_number_rows(settings,ship.rect.height,alien.rect.height)
     
-    
-    #Creates row of aliens
+    #Creates rows of aliens
     for row_number in range(number_of_rows):
         for alien_no in range(number_of_aliens):
             create_alien(settings,screen,aliens,alien_no, row_number)
@@ -94,10 +95,18 @@ def get_number_rows(settings,ship_height,alien_height):
     number_of_rows = int(screen_height/(2*alien_height))
     return number_of_rows
     
-def update_aliens(settings,aliens):
+def update_aliens(settings,stats, screen,ship,aliens,bullets):
     """Update position of aliens"""
     check_army_position(settings,aliens)
     aliens.update()
+    
+    #look for ship and alien collisions
+    #This method is different in that it checks collision of a sprite and a group.
+    #The other method checked collision of groups
+    if pygame.sprite.spritecollideany(ship,aliens):
+        ship_hit(settings,stats,screen,ship,aliens,bullets)
+        
+    check_aliens_bottom(settings, stats, screen, ship, aliens, bullets)
     
 def check_army_position(settings,aliens):
     """Checks whether the army has hit the edge of the screen"""
@@ -112,5 +121,40 @@ def change_army_direction(settings,aliens):
         alien.rect.y += settings.alien_drop_speed
     settings.alien_direction *= -1
     
-  
+def bullet_alien_collision(settings,screen,ship,aliens,bullets):
+    """Checks whether bullet collides with alien. If so delete both."""
+    #The first true means delete bullet, and 2nd on is the alien.
+    collisions = pygame.sprite.groupcollide(bullets,aliens,True,True)
     
+    #Make a new army if the current one is all dead
+    if len(aliens) == 0:
+        bullets.empty()
+        create_army(settings,screen,ship,aliens)
+        
+def ship_hit(settings,stats,screen,ship,aliens,bullets):
+    """Response to alien hitting the ship"""
+    if stats.ships_left > 0:
+        
+        stats.ships_left -= 1
+    
+        #Removes all bullets and aliens to reset game
+        aliens.empty()
+        bullets.empty()
+    
+        #Make new army and center the ship
+        create_army(settings, screen, ship, aliens)
+        ship.center_ship()
+    
+        #Pause to let the user see the collision
+        sleep(0.5)
+        
+    else:
+        stats.game_active = False
+    
+def check_aliens_bottom(settings, stats, screen, ship, aliens, bullets):
+    """Check if any aliens have hit the bottom of the screen"""
+    screen_rect = screen.get_rect()
+    for alien in aliens.sprites():
+        if alien.rect.bottom >= screen_rect.bottom:
+            ship_hit(settings,stats,screen,ship,aliens,bullets)
+            break
