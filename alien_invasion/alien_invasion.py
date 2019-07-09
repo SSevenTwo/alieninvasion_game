@@ -16,7 +16,10 @@ def run_game():
     #Makes a ship/alien object and bullet group
     ship = Ship(settings, screen)
     bullets = Group()
-    alien = Alien(settings,screen)
+    aliens = Group()
+    
+    #Creat aliens
+    g.create_army(settings,screen,ship,aliens)
     
     #Start main loop of the game.
     while True:
@@ -25,8 +28,9 @@ def run_game():
         g.update_events(settings,screen,ship,bullets)
         ship.move()
         g.update_bullets(bullets)
+        g.update_aliens(settings, aliens)
         
         #Updates screen after each loop
-        g.update_screen(settings, screen, ship, alien, bullets)
+        g.update_screen(settings, screen, ship, aliens, bullets)
 
 run_game()

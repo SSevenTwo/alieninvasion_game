@@ -6,7 +6,7 @@ class Alien(Sprite):
     
     def __init__(self,settings,screen):
         """Creates alien object"""
-        super(Alien,self)
+        super(Alien,self).__init__()
         self.screen = screen
         self.settings = settings
         
@@ -22,3 +22,16 @@ class Alien(Sprite):
     def blitme(self):
         """Draw alien"""
         self.screen.blit(self.image,self.rect)
+        
+    def update(self):
+        """Move alien"""
+        self.x += (self.settings.alien_speed * self.settings.alien_direction)
+        self.rect.x = self.x
+    
+    def check_edge_hit(self):
+        """Checks whether the alien has hit the edge of the screen"""
+        screen_rect = self.screen.get_rect()
+        if self.rect.right >=screen_rect.right:
+            return True
+        elif self.rect.left<=0:
+            return True
