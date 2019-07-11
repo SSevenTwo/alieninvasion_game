@@ -4,7 +4,7 @@ from bullet import Bullet
 from alien import Alien
 from time import sleep
 
-def update_events(settings, screen, ship,bullets):
+def update_events(settings, screen, stats, play_button, ship,aliens,bullets):
     """Respond to game events"""
     for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -13,8 +13,13 @@ def update_events(settings, screen, ship,bullets):
                 check_keydown(event, settings, screen, ship, bullets)
             elif event.type == pygame.KEYUP:
                 check_keyup(event, ship)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                #Names the 2 numbers in the tuple x and y
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                #mouse_y = pygame.mouse.get_pos()
+                check_play_button(settings, screen, stats,play_button,mouse_x,mouse_y,ship,aliens,bullets)
 
-def update_screen(settings, screen, ship, aliens, bullets):
+def update_screen(settings, screen, stats, ship, aliens, bullets,play_button):
     """Updates the screen"""
     #Re-draw the screen
     screen.fill(settings.bg_color)
@@ -24,6 +29,9 @@ def update_screen(settings, screen, ship, aliens, bullets):
         bullet.draw_bullet()
     ship.blitme()
     aliens.draw(screen)
+    
+    if not stats.game_active:
+        play_button.draw_button()
         
     #Draw the latest screen
     pygame.display.flip()
@@ -126,9 +134,10 @@ def bullet_alien_collision(settings,screen,ship,aliens,bullets):
     #The first true means delete bullet, and 2nd on is the alien.
     collisions = pygame.sprite.groupcollide(bullets,aliens,True,True)
     
-    #Make a new army if the current one is all dead
+    #Make a new army if the current one is all dead and speed up the game.
     if len(aliens) == 0:
         bullets.empty()
+        settings.increase_speed()
         create_army(settings,screen,ship,aliens)
         
 def ship_hit(settings,stats,screen,ship,aliens,bullets):
@@ -150,6 +159,7 @@ def ship_hit(settings,stats,screen,ship,aliens,bullets):
         
     else:
         stats.game_active = False
+        pygame.mouse.set_visible(True)
     
 def check_aliens_bottom(settings, stats, screen, ship, aliens, bullets):
     """Check if any aliens have hit the bottom of the screen"""
@@ -158,3 +168,19 @@ def check_aliens_bottom(settings, stats, screen, ship, aliens, bullets):
         if alien.rect.bottom >= screen_rect.bottom:
             ship_hit(settings,stats,screen,ship,aliens,bullets)
             break
+            
+def check_play_button(settings, screen, stats,play_button,mouse_x,mouse_y,ship,aliens,bullets):
+    """Starts game if button is clicked on"""
+    if play_button.rect.collidepoint(mouse_x,mouse_y) and not stats.game_active:
+        #Hide mouse while in game
+        pygame.mouse.set_visible(False)
+        settings.dynamic_settings_reset()
+        stats.reset_stats()
+        stats.game_active = True
+        
+        #Resets the game state
+        bullets.empty()
+        aliens.empty()
+        create_army(settings,screen,ship,aliens)
+        ship.center_ship()
+        
