@@ -3,21 +3,23 @@ import pygame
 from bullet import Bullet
 from alien import Alien
 from time import sleep
+from filehandling import save_score
 
-def update_events(settings, screen, stats, play_button, ship,aliens,bullets):
+def update_events(settings, screen, stats, play_button, ship,aliens,bullets,scoreboard):
     """Respond to game events"""
     for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                save_score(stats)
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                check_keydown(event, settings, screen, ship, bullets)
+                check_keydown(event, settings, screen, ship, bullets,stats)
             elif event.type == pygame.KEYUP:
                 check_keyup(event, ship)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 #Names the 2 numbers in the tuple x and y
                 mouse_x, mouse_y = pygame.mouse.get_pos()
                 #mouse_y = pygame.mouse.get_pos()
-                check_play_button(settings, screen, stats,play_button,mouse_x,mouse_y,ship,aliens,bullets)
+                check_play_button(settings, screen, stats,play_button,mouse_x,mouse_y,ship,aliens,bullets,scoreboard)
 
 def update_screen(settings, screen, stats, scoreboard, ship, aliens, bullets,play_button):
     """Updates the screen"""
@@ -37,7 +39,7 @@ def update_screen(settings, screen, stats, scoreboard, ship, aliens, bullets,pla
     #Draw the latest screen
     pygame.display.flip()
     
-def check_keydown(event, settings, screen, ship, bullets):
+def check_keydown(event, settings, screen, ship, bullets, stats):
     """Checks when a key is being pressed"""
     if event.key == pygame.K_RIGHT:
         ship.move_right = True
@@ -46,6 +48,7 @@ def check_keydown(event, settings, screen, ship, bullets):
     elif event.key == pygame.K_SPACE:
         shoot_bullet(settings, screen, ship, bullets)
     elif event.key == pygame.K_q:
+        save_score(stats)
         sys.exit()
         
 def check_keyup(event, ship):
@@ -104,7 +107,7 @@ def get_number_rows(settings,ship_height,alien_height):
     number_of_rows = int(screen_height/(2*alien_height))
     return number_of_rows
     
-def update_aliens(settings,stats, screen,ship,aliens,bullets):
+def update_aliens(settings,stats, screen,ship,aliens,bullets,scoreboard):
     """Update position of aliens"""
     check_army_position(settings,aliens)
     aliens.update()
@@ -113,9 +116,9 @@ def update_aliens(settings,stats, screen,ship,aliens,bullets):
     #This method is different in that it checks collision of a sprite and a group.
     #The other method checked collision of groups
     if pygame.sprite.spritecollideany(ship,aliens):
-        ship_hit(settings,stats,screen,ship,aliens,bullets)
+        ship_hit(settings,stats,screen,ship,aliens,bullets,scoreboard)
         
-    check_aliens_bottom(settings, stats, screen, ship, aliens, bullets)
+    check_aliens_bottom(settings, stats, screen, ship, aliens, bullets, scoreboard)
     
 def check_army_position(settings,aliens):
     """Checks whether the army has hit the edge of the screen"""
@@ -142,18 +145,22 @@ def bullet_alien_collision(settings,screen,stats,scoreboard, ship,aliens,bullets
     if collisions:
         stats.score += (settings.points_earned * count)
         scoreboard.prep_score()
+        check_highscore(stats,scoreboard)
     
     #Make a new army if the current one is all dead and speed up the game.
     if len(aliens) == 0:
         bullets.empty()
         settings.increase_speed()
+        stats.level += 1
+        scoreboard.prep_level()
         create_army(settings,screen,ship,aliens)
         
-def ship_hit(settings,stats,screen,ship,aliens,bullets):
+def ship_hit(settings,stats,screen,ship,aliens,bullets,scoreboard):
     """Response to alien hitting the ship"""
     if stats.ships_left > 0:
         
         stats.ships_left -= 1
+        scoreboard.prep_ships()
     
         #Removes all bullets and aliens to reset game
         aliens.empty()
@@ -170,21 +177,28 @@ def ship_hit(settings,stats,screen,ship,aliens,bullets):
         stats.game_active = False
         pygame.mouse.set_visible(True)
     
-def check_aliens_bottom(settings, stats, screen, ship, aliens, bullets):
+def check_aliens_bottom(settings, stats, screen, ship, aliens, bullets,scoreboard):
     """Check if any aliens have hit the bottom of the screen"""
     screen_rect = screen.get_rect()
     for alien in aliens.sprites():
         if alien.rect.bottom >= screen_rect.bottom:
-            ship_hit(settings,stats,screen,ship,aliens,bullets)
+            ship_hit(settings,stats,screen,ship,aliens,bullets,scoreboard)
             break
             
-def check_play_button(settings, screen, stats,play_button,mouse_x,mouse_y,ship,aliens,bullets):
+def check_play_button(settings, screen, stats,play_button,mouse_x,mouse_y,ship,aliens,bullets,sb):
     """Starts game if button is clicked on"""
     if play_button.rect.collidepoint(mouse_x,mouse_y) and not stats.game_active:
         #Hide mouse while in game
         pygame.mouse.set_visible(False)
         settings.dynamic_settings_reset()
         stats.reset_stats()
+        
+        #Reset scoreboard
+        sb.prep_score()
+        sb.prep_highscore()
+        sb.prep_level()
+        sb.prep_ships()
+        
         stats.game_active = True
         
         #Resets the game state
@@ -192,4 +206,10 @@ def check_play_button(settings, screen, stats,play_button,mouse_x,mouse_y,ship,a
         aliens.empty()
         create_army(settings,screen,ship,aliens)
         ship.center_ship()
+        
+def check_highscore(stats,scoreboard):
+    """Checks whether a highscore has been set"""
+    if stats.score > stats.highscore:
+        stats.highscore = stats.score
+        scoreboard.prep_highscore()
         

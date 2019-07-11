@@ -8,7 +8,6 @@ class Settings():
         self.bg_color = (230,230,230)
         self.ship_lives = 2
         self.score_multiplier = 1.5
-        self.highscore = 0
     
         #Bullet settings
         self.bullet_width = 300
