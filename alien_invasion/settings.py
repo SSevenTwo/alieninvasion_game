@@ -7,6 +7,8 @@ class Settings():
         self.screen_height = 768
         self.bg_color = (230,230,230)
         self.ship_lives = 2
+        self.score_multiplier = 1.5
+        self.highscore = 0
     
         #Bullet settings
         self.bullet_width = 300
@@ -32,9 +34,13 @@ class Settings():
         #1 represents moving right, -1 represents moving left
         self.alien_direction = 1
         
+        #Scoring
+        self.points_earned = 100
+        
     def increase_speed(self):
         """Increases the speed of the game by the multiplier"""
         self.bullet_speed *= self.speedup_multiplier
         self.ship_speed *= self.speedup_multiplier
         self.alien_speed *= self.speedup_multiplier
+        self.points_earned *= self.score_multiplier
         

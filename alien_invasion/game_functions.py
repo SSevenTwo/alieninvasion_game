@@ -19,7 +19,7 @@ def update_events(settings, screen, stats, play_button, ship,aliens,bullets):
                 #mouse_y = pygame.mouse.get_pos()
                 check_play_button(settings, screen, stats,play_button,mouse_x,mouse_y,ship,aliens,bullets)
 
-def update_screen(settings, screen, stats, ship, aliens, bullets,play_button):
+def update_screen(settings, screen, stats, scoreboard, ship, aliens, bullets,play_button):
     """Updates the screen"""
     #Re-draw the screen
     screen.fill(settings.bg_color)
@@ -29,6 +29,7 @@ def update_screen(settings, screen, stats, ship, aliens, bullets,play_button):
         bullet.draw_bullet()
     ship.blitme()
     aliens.draw(screen)
+    scoreboard.show_score()
     
     if not stats.game_active:
         play_button.draw_button()
@@ -54,10 +55,10 @@ def check_keyup(event, ship):
     elif event.key == pygame.K_LEFT:
         ship.move_left = False
 
-def update_bullets(settings,screen,ship, aliens,bullets):
+def update_bullets(settings,screen,stats,scoreboard,ship, aliens,bullets):
     """Updates position of bullets as well as delete old bullets"""
     bullets.update()
-    bullet_alien_collision(settings,screen,ship,aliens,bullets)
+    bullet_alien_collision(settings,screen,stats,scoreboard, ship,aliens,bullets)
         
     #Remove bullets when top is reached
     for bullet in bullets.copy():
@@ -129,10 +130,18 @@ def change_army_direction(settings,aliens):
         alien.rect.y += settings.alien_drop_speed
     settings.alien_direction *= -1
     
-def bullet_alien_collision(settings,screen,ship,aliens,bullets):
+def bullet_alien_collision(settings,screen,stats,scoreboard, ship,aliens,bullets):
     """Checks whether bullet collides with alien. If so delete both."""
+    #This returns a dictionary of the first argument as a key and the 2nd as a value
     #The first true means delete bullet, and 2nd on is the alien.
     collisions = pygame.sprite.groupcollide(bullets,aliens,True,True)
+    
+    #Determines how many aliens were hit with the bullet (incase bullet hits more than 1)
+    count = sum(len(v) for v in collisions.values())
+    
+    if collisions:
+        stats.score += (settings.points_earned * count)
+        scoreboard.prep_score()
     
     #Make a new army if the current one is all dead and speed up the game.
     if len(aliens) == 0:
