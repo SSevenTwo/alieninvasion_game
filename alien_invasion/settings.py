@@ -1,3 +1,6 @@
+from sounds import play_levelup
+from time import sleep
+
 class Settings():
     """Stores the settings of the game"""
     
@@ -10,13 +13,13 @@ class Settings():
         self.score_multiplier = 1.5
     
         #Bullet settings
-        self.bullet_width = 300
+        self.bullet_width = 50
         self.bullet_height = 15
         self.bullet_color = (60,60,60)
         self.bullet_limit = 3
         
         #Alien settings
-        self.alien_drop_speed = 50
+        self.alien_drop_speed = 15
         
         #Sets dynamic settings
         self.dynamic_settings_reset()
@@ -38,6 +41,8 @@ class Settings():
         
     def increase_speed(self):
         """Increases the speed of the game by the multiplier"""
+        play_levelup()
+        sleep(0.2)
         self.bullet_speed *= self.speedup_multiplier
         self.ship_speed *= self.speedup_multiplier
         self.alien_speed *= self.speedup_multiplier

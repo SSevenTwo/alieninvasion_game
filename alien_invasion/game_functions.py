@@ -4,6 +4,7 @@ from bullet import Bullet
 from alien import Alien
 from time import sleep
 from filehandling import save_score
+import sounds as s
 
 def update_events(settings, screen, stats, play_button, ship,aliens,bullets,scoreboard):
     """Respond to game events"""
@@ -73,6 +74,7 @@ def shoot_bullet(settings, screen, ship, bullets):
     if len(bullets) < settings.bullet_limit:
         bullet = Bullet(settings,screen,ship)
         bullets.add(bullet)
+        s.play_shoot()
         
 def create_army(settings, screen, ship, aliens):
     """Creates an army of aliens"""
@@ -116,6 +118,7 @@ def update_aliens(settings,stats, screen,ship,aliens,bullets,scoreboard):
     #This method is different in that it checks collision of a sprite and a group.
     #The other method checked collision of groups
     if pygame.sprite.spritecollideany(ship,aliens):
+        s.play_boom()
         ship_hit(settings,stats,screen,ship,aliens,bullets,scoreboard)
         
     check_aliens_bottom(settings, stats, screen, ship, aliens, bullets, scoreboard)
@@ -144,6 +147,7 @@ def bullet_alien_collision(settings,screen,stats,scoreboard, ship,aliens,bullets
     
     if collisions:
         stats.score += (settings.points_earned * count)
+        s.play_explode()
         scoreboard.prep_score()
         check_highscore(stats,scoreboard)
     
@@ -182,6 +186,7 @@ def check_aliens_bottom(settings, stats, screen, ship, aliens, bullets,scoreboar
     screen_rect = screen.get_rect()
     for alien in aliens.sprites():
         if alien.rect.bottom >= screen_rect.bottom:
+            s.play_boom()
             ship_hit(settings,stats,screen,ship,aliens,bullets,scoreboard)
             break
             
@@ -192,6 +197,7 @@ def check_play_button(settings, screen, stats,play_button,mouse_x,mouse_y,ship,a
         pygame.mouse.set_visible(False)
         settings.dynamic_settings_reset()
         stats.reset_stats()
+        s.play_music()
         
         #Reset scoreboard
         sb.prep_score()
